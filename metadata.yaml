@@ -1,0 +1,22 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: prometheus-edge-hub-operator
+description: |
+  Prometheus Edge Hub is a replacement of the Prometheus Pushgateway which allows for the pushing of
+  metrics to an endpoint for scraping by prometheus, rather than having Prometheus scrape the metric
+  sources directly. This differs from the Prometheus Pushgateway in several ways, the most important
+  of which being that it does not overwrite timestamps and that metrics do not persist until updated.
+  When the hub is scraped, all metrics are drained.
+summary: |
+  Prometheus Edge Hub is a replacement of the Prometheus Pushgateway which allows for the pushing of
+    metrics to an endpoint for scraping by prometheus.
+
+containers:
+  prometheus-edge-hub:
+    resource: prometheus-edge-hub-image
+
+resources:
+  prometheus-edge-hub-image:
+    type: oci-image
+    description: OCI image for prometheus-edge-hub (facebookincubator/prometheus-edge-hub:latest)
