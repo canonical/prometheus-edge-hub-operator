@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  prometheus-edge-hub-lint-report:
+  lint-report:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,7 +16,7 @@ jobs:
       - name: Run tests using tox
         run: tox -e lint
 
-  prometheus-edge-hub-static-analysis:
+  static-analysis:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
       - name: Run tests using tox
         run: tox -e static
 
-  prometheus-edge-hub-unit-tests-with-coverage:
+  unit-tests-with-coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -34,8 +34,7 @@ jobs:
       - name: Run tests using tox
         run: tox -e unit
 
-  prometheus-edge-hub-integration-test:
-    name: Integration tests
+  integration-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
