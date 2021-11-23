@@ -8,22 +8,24 @@ sources directly. This differs from the Prometheus Pushgateway in several ways, 
 of which being that it does not overwrite timestamps and that metrics do not persist until updated. 
 When the hub is scraped, all metrics are drained.
 
+This project is a Juju charm to deploy Prometheus Edge Hub on Kubernetes.
+
 
 ## Usage
 
-TODO: Provide high-level usage, such as required config or relations
+For now, you have to build the charm yourself before deploying it. Please refer to CONTRIBUTING.md
+for more information on the build itself. Once it is built, you can deploy the charm using 
+`juju deploy`: 
 
-
-## Relations
-
-TODO: Provide any relations which are provided or required by your charm
+```bash
+juju deploy ./prometheus-edge-hub_ubuntu-20.04-amd64.charm \
+  --resource prometheus-edge-hub-image=facebookincubator/prometheus-edge-hub:1.0.0
+```
 
 ## OCI Images
 
-TODO: Include a link to the default image your charm uses
+Default image: facebookincubator/prometheus-edge-hub:1.0.0
 
 ## Contributing
 
-Please see the [Juju SDK docs](https://juju.is/docs/sdk) for guidelines 
-on enhancements to this charm following best practice guidelines, and
-`CONTRIBUTING.md` for developer guidance.
+Please see the `CONTRIBUTING.md` for developer guidance.

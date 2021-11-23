@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-# Copyright 2021 Guillaume
+# Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more at: https://juju.is/docs/sdk
 
 import logging
 
-from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 from ops.charm import CharmBase
 from ops.main import main
+from ops.model import MaintenanceStatus, ActiveStatus
 from ops.pebble import Layer
-from ops.model import MaintenanceStatus
+
+from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 
 logger = logging.getLogger(__name__)
 
@@ -19,15 +18,16 @@ class PrometheusEdgeHubOperatorCharm(CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._container_name= self._service_name = "prometheus-edge-hub"
+        self._container_name = self._service_name = "prometheus-edge-hub"
         self._container = self.unit.get_container(self._container_name)
         self.framework.observe(
             self.on.prometheus_edge_hub_pebble_ready,
             self._on_prometheus_edge_hub_pebble_ready
         )
-        self._service_patcher = KubernetesServicePatch(self, [("grpc", 9180, 9108)])
+        self._service_patcher = KubernetesServicePatch(self, [("prometheus-edge-hub", 9091, 9091)])
 
-    def pebble_layer(self):
+    @property
+    def _pebble_layer(self) -> Layer:
         return Layer(
             {
                 "summary": f"{self._service_name} pebble layer",
@@ -36,7 +36,7 @@ class PrometheusEdgeHubOperatorCharm(CharmBase):
                         "override": "replace",
                         "startup": "enabled",
                         "command": "prometheus-edge-hub -limit=-1 -port=9091 -scrapeTimeout=10",
-                    }
+                    },
                 },
             }
         )
