@@ -4,25 +4,22 @@
 
 import logging
 
+from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import MaintenanceStatus, ActiveStatus
+from ops.model import ActiveStatus, MaintenanceStatus
 from ops.pebble import Layer
-
-from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 
 logger = logging.getLogger(__name__)
 
 
-class PrometheusEdgeHubOperatorCharm(CharmBase):
-
+class PrometheusEdgeHubCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
         self._container_name = self._service_name = "prometheus-edge-hub"
         self._container = self.unit.get_container(self._container_name)
         self.framework.observe(
-            self.on.prometheus_edge_hub_pebble_ready,
-            self._on_prometheus_edge_hub_pebble_ready
+            self.on.prometheus_edge_hub_pebble_ready, self._on_prometheus_edge_hub_pebble_ready
         )
         self._service_patcher = KubernetesServicePatch(self, [("prometheus-edge-hub", 9091, 9091)])
 
@@ -33,6 +30,7 @@ class PrometheusEdgeHubOperatorCharm(CharmBase):
                 "summary": f"{self._service_name} pebble layer",
                 "services": {
                     self._service_name: {
+                        "summary": self._service_name,
                         "override": "replace",
                         "startup": "enabled",
                         "command": "prometheus-edge-hub -limit=-1 -port=9091 -scrapeTimeout=10",
@@ -53,4 +51,4 @@ class PrometheusEdgeHubOperatorCharm(CharmBase):
 
 
 if __name__ == "__main__":
-    main(PrometheusEdgeHubOperatorCharm)
+    main(PrometheusEdgeHubCharm)
