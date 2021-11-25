@@ -1,12 +1,15 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import typing
 import unittest
 from unittest.mock import patch
 
 from ops.testing import Harness
 
 from charm import PrometheusEdgeHubCharm
+
+MINIMAL_CONFIG: typing.Mapping = {}
 
 
 class TestCharm(unittest.TestCase):
@@ -20,8 +23,9 @@ class TestCharm(unittest.TestCase):
         initial_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub")
         self.assertEqual(initial_plan.to_yaml(), "{}\n")
 
+    @patch("charm.PrometheusEdgeHubCharm._patch_kubernetes_based_on_config")
     def test_given_pebble_ready_when_get_pebble_plan_then_plan_is_filled_with_service_content(
-        self,
+        self, mock_prometheus_patch
     ):
         expected_plan = {
             "services": {
@@ -29,11 +33,115 @@ class TestCharm(unittest.TestCase):
                     "override": "replace",
                     "summary": "prometheus-edge-hub",
                     "startup": "enabled",
-                    "command": "prometheus-edge-hub -limit=-1 -port=9091 -scrapeTimeout=10",
+                    "command": "prometheus-edge-hub",
                 },
             },
         }
+        self.harness.update_config(MINIMAL_CONFIG)
         container = self.harness.model.unit.get_container("prometheus-edge-hub")
         self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.assertEqual(expected_plan, updated_plan)
+
+    @patch("charm.PrometheusEdgeHubCharm._patch_kubernetes_based_on_config")
+    def test_given_configs_provided_when_get_pebble_plan_then_plan_is_filled_with_service_content(
+        self, mock_prometheus_patch
+    ):
+        config: typing.Mapping = {"port": 1234, "grpc-port": 5678, "limit": 200}
+        expected_plan = {
+            "services": {
+                "prometheus-edge-hub": {
+                    "override": "replace",
+                    "summary": "prometheus-edge-hub",
+                    "startup": "enabled",
+                    "command": f"prometheus-edge-hub "
+                    f"-port={config['port']} "
+                    f"-grpc-port={config['grpc-port']} "
+                    f"-limit={config['limit']}",
+                },
+            },
+        }
+        self.harness.update_config(config)
+        container = self.harness.model.unit.get_container("prometheus-edge-hub")
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
+        self.assertEqual(expected_plan, updated_plan)
+
+    @patch("charm.PrometheusEdgeHubCharm._patch_kubernetes_based_on_config")
+    def test_given_default_configs_provided_when_get_pebble_plan_then_plan_is_filled_with_service_content(  # noqa: E501
+        self, mock_prometheus_patch
+    ):
+        config: typing.Mapping = {"port": 9091, "limit": -1}
+        expected_plan = {
+            "services": {
+                "prometheus-edge-hub": {
+                    "override": "replace",
+                    "summary": "prometheus-edge-hub",
+                    "startup": "enabled",
+                    "command": "prometheus-edge-hub",
+                },
+            },
+        }
+        self.harness.update_config(config)
+        container = self.harness.model.unit.get_container("prometheus-edge-hub")
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
+        self.assertEqual(expected_plan, updated_plan)
+
+    @patch("charm.PrometheusEdgeHubCharm._patch_kubernetes_based_on_config")
+    def test_given_default_configs_provided_when_defaults_config_sent_again_then_plan_is_not_changed(  # noqa: E501
+        self, mock_prometheus_patch
+    ):
+        config: typing.Mapping = {"port": 9091, "limit": -1}
+        expected_plan = {
+            "services": {
+                "prometheus-edge-hub": {
+                    "override": "replace",
+                    "summary": "prometheus-edge-hub",
+                    "startup": "enabled",
+                    "command": "prometheus-edge-hub",
+                },
+            },
+        }
+
+        container = self.harness.model.unit.get_container("prometheus-edge-hub")
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        initial_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
+        self.harness.update_config(config)
+        updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
+        self.assertEqual(initial_plan, updated_plan)
+        self.assertEqual(updated_plan, expected_plan)
+
+    @patch("charm.PrometheusEdgeHubCharm._patch_kubernetes_based_on_config")
+    def test_given_default_configs_provided_when_config_change_then_plan_is_changed(
+        self, mock_prometheus_patch
+    ):
+        config: typing.Mapping = {"grpc-port": 9092, "limit": -1}
+        expected_initial_plan = {
+            "services": {
+                "prometheus-edge-hub": {
+                    "override": "replace",
+                    "summary": "prometheus-edge-hub",
+                    "startup": "enabled",
+                    "command": "prometheus-edge-hub",
+                },
+            },
+        }
+        expected_final_plan = {
+            "services": {
+                "prometheus-edge-hub": {
+                    "override": "replace",
+                    "summary": "prometheus-edge-hub",
+                    "startup": "enabled",
+                    "command": f"prometheus-edge-hub -grpc-port={config['grpc-port']}",
+                },
+            },
+        }
+
+        container = self.harness.model.unit.get_container("prometheus-edge-hub")
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        initial_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
+        self.harness.update_config(config)
+        updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
+        self.assertEqual(initial_plan, expected_initial_plan)
+        self.assertEqual(updated_plan, expected_final_plan)

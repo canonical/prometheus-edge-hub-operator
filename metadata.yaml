@@ -20,4 +20,4 @@ resources:
   prometheus-edge-hub-image:
     type: oci-image
     description: OCI image for prometheus-edge-hub
-    upstream-source: facebookincubator/prometheus-edge-hub:1.0.0
+    upstream-source: facebookincubator/prometheus-edge-hub:1.1.0
