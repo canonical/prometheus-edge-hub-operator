@@ -55,9 +55,7 @@ class PrometheusEdgeHubCharm(CharmBase):
         none is provided).
         """
         config = self.model.config
-        args = [
-            f"-grpc-port={PROMETHEUS_EDGE_HUB_GRPC_PORT}",
-        ]
+        args = [f"-grpc-port={PROMETHEUS_EDGE_HUB_GRPC_PORT}"]
         if config["limit"] != -1:
             args.append(f"-limit={config['limit']}")
         if config["scrape-timeout"] != 10:

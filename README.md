@@ -23,6 +23,13 @@ juju deploy ./prometheus-edge-hub_ubuntu-20.04-amd64.charm \
  --resource prometheus-edge-hub-image=facebookincubator/prometheus-edge-hub:1.1.0
 ```
 
+### Relating to Prometheus
+
+```bash
+juju deploy prometheus-k8s --channel edge
+juju relate prometheus-k8s prometheus-edge-hub
+```
+
 ## OCI Images
 
 Default image: facebookincubator/prometheus-edge-hub:1.1.0
