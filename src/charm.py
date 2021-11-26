@@ -4,7 +4,12 @@
 
 import logging
 
-from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
+from charms.observability_libs.v0.kubernetes_service_patch import (  # type: ignore
+    KubernetesServicePatch,
+)
+from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore
+    MetricsEndpointProvider,
+)
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus
@@ -32,6 +37,15 @@ class PrometheusEdgeHubCharm(CharmBase):
                     PROMETHEUS_EDGE_HUB_GRPC_PORT,
                     PROMETHEUS_EDGE_HUB_GRPC_PORT,
                 ),
+            ],
+        )
+        self.metrics_endpoint_provider = MetricsEndpointProvider(
+            self,
+            relation_name="monitoring",
+            jobs=[
+                {
+                    "static_configs": [{"targets": [f"*:{PROMETHEUS_EDGE_HUB_PORT}"]}],
+                }
             ],
         )
 
