@@ -19,15 +19,9 @@ for more information on the build itself. Once it is built, you can deploy the c
 
 ```bash
 juju deploy ./prometheus-edge-hub_ubuntu-20.04-amd64.charm \
- --config grpc-port=9092 \
  --config limit=500000 \
  --resource prometheus-edge-hub-image=facebookincubator/prometheus-edge-hub:1.1.0
 ```
-
-## Configs
-
-Note that config for `port` and `grpc-port` have to be set at the deploy time. Trying to change 
-them at a further time won't change the Kubernetes service exposed port.
 
 ## OCI Images
 

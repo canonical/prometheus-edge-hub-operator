@@ -12,6 +12,9 @@ from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
 
+PROMETHEUS_EDGE_HUB_PORT = 9091
+PROMETHEUS_EDGE_HUB_GRPC_PORT = 9092
+
 
 class PrometheusEdgeHubCharm(CharmBase):
     def __init__(self, *args):
@@ -20,32 +23,17 @@ class PrometheusEdgeHubCharm(CharmBase):
         self._container = self.unit.get_container(self._container_name)
         self.framework.observe(self.on.prometheus_edge_hub_pebble_ready, self._configure)
         self.framework.observe(self.on.config_changed, self._configure)
-        ports_to_configure = self._get_kubernetes_ports_from_config()
-        self._service_patcher = KubernetesServicePatch(self, ports_to_configure)
-
-    def _get_kubernetes_ports_from_config(self) -> list:
-        """
-        Returns the list of ports to configure based on configs provided by the user (or the
-        default one if none is provided)
-        """
-        config = self.model.config
-        ports_to_configure = [(self._service_name, config["port"], config["port"])]
-        if config["grpc-port"] != 0:
-            ports_to_configure.append(
-                (f"{self._service_name}-grpc", config["grpc-port"], config["grpc-port"])
-            )
-        return ports_to_configure
-
-    def _patch_kubernetes_based_on_config(self):
-        """
-        Patches Kubernetes service based on configs provided by the user (or the default one if
-        none is provided). This method can be called at any time. We call the service patcher
-        private methods because the patches doesn't present any public method to trigger service
-        patches except on install and upgrade Juju events.
-        """
-        ports_to_configure = self._get_kubernetes_ports_from_config()
-        self._service_patcher.service = self._service_patcher._service_object(ports_to_configure)
-        self._service_patcher._patch(None)
+        self._service_patcher = KubernetesServicePatch(
+            self,
+            [
+                (self._service_name, PROMETHEUS_EDGE_HUB_PORT, PROMETHEUS_EDGE_HUB_PORT),
+                (
+                    f"{self._service_name}-grpc",
+                    PROMETHEUS_EDGE_HUB_GRPC_PORT,
+                    PROMETHEUS_EDGE_HUB_GRPC_PORT,
+                ),
+            ],
+        )
 
     def _command(self) -> str:
         """
@@ -53,11 +41,9 @@ class PrometheusEdgeHubCharm(CharmBase):
         none is provided).
         """
         config = self.model.config
-        args = []
-        if config["port"] != 9091:
-            args.append(f"-port={config['port']}")
-        if config["grpc-port"] != 0:
-            args.append(f"-grpc-port={config['grpc-port']}")
+        args = [
+            f"-grpc-port={PROMETHEUS_EDGE_HUB_GRPC_PORT}",
+        ]
         if config["limit"] != -1:
             args.append(f"-limit={config['limit']}")
         if config["scrape-timeout"] != 10:
@@ -93,7 +79,6 @@ class PrometheusEdgeHubCharm(CharmBase):
         plan = self._container.get_plan()
         layer = self._pebble_layer
         if plan.services != layer.services:
-            self._patch_kubernetes_based_on_config()
             self._container.add_layer(self._container_name, layer, combine=True)
             self._container.restart(self._service_name)
             logger.info(f"Restarted container {self._service_name}")

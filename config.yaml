@@ -2,16 +2,6 @@
 # See LICENSE file for licensing details.
 
 options:
-  port:
-    description: |
-      Prometheus-edge-hub port
-    type: int
-    default: 9091
-  grpc-port:
-    description: |
-      Prometheus-edge-hub grpc-port
-    type: int
-    default: 0
   limit:
     description: |
       Limit the total metrics in the cache at one time. Will reject a push if cache is full.
