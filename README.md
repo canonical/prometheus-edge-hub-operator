@@ -19,7 +19,7 @@ for more information on the build itself. Once it is built, you can deploy the c
 
 ```bash
 juju deploy ./prometheus-edge-hub_ubuntu-20.04-amd64.charm \
- --config limit=500000 \
+ --config metrics_count_limit=500000 \
  --resource prometheus-edge-hub-image=facebookincubator/prometheus-edge-hub:1.1.0
 ```
 

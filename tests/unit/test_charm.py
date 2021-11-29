@@ -47,7 +47,7 @@ class TestCharm(unittest.TestCase):
     def test_given_configs_provided_when_get_pebble_plan_then_plan_is_filled_with_service_content(
         self,
     ):
-        config: typing.Mapping = {"limit": 200}
+        config: typing.Mapping = {"metrics_count_limit": 200}
         expected_plan = {
             "services": {
                 "prometheus-edge-hub": {
@@ -56,7 +56,7 @@ class TestCharm(unittest.TestCase):
                     "startup": "enabled",
                     "command": f"prometheus-edge-hub "
                     f"-grpc-port={GRPC_PORT} "
-                    f"-limit={config['limit']}",
+                    f"-limit={config['metrics_count_limit']}",
                 },
             },
         }
@@ -69,7 +69,7 @@ class TestCharm(unittest.TestCase):
     def test_given_default_configs_provided_when_get_pebble_plan_then_plan_is_filled_with_service_content(  # noqa: E501
         self,
     ):
-        config: typing.Mapping = {"limit": -1}
+        config: typing.Mapping = {"metrics_count_limit": -1}
         expected_plan = {
             "services": {
                 "prometheus-edge-hub": {
@@ -89,7 +89,7 @@ class TestCharm(unittest.TestCase):
     def test_given_default_configs_provided_when_defaults_config_sent_again_then_plan_is_not_changed(  # noqa: E501
         self,
     ):
-        config: typing.Mapping = {"limit": -1}
+        config: typing.Mapping = {"metrics_count_limit": -1}
         expected_plan = {
             "services": {
                 "prometheus-edge-hub": {
@@ -110,7 +110,7 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(updated_plan, expected_plan)
 
     def test_given_default_configs_provided_when_config_change_then_plan_is_changed(self):
-        config: typing.Mapping = {"limit": 25}
+        config: typing.Mapping = {"metrics_count_limit": 25}
         expected_initial_plan = {
             "services": {
                 "prometheus-edge-hub": {
@@ -128,7 +128,7 @@ class TestCharm(unittest.TestCase):
                     "summary": "prometheus-edge-hub",
                     "startup": "enabled",
                     "command": f"prometheus-edge-hub -grpc-port={GRPC_PORT}"
-                    f" -limit={config['limit']}",
+                    f" -limit={config['metrics_count_limit']}",
                 },
             },
         }
