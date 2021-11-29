@@ -22,3 +22,6 @@ To run the integration tests suite, run the following commands:
 ```bash
 tox -e integration
 ```
+
+## OCI Images
+Default image: facebookincubator/prometheus-edge-hub:1.1.0

@@ -23,5 +23,5 @@ resources:
     upstream-source: facebookincubator/prometheus-edge-hub:1.1.0
 
 provides:
-  monitoring:
+  metrics-endpoint:
     interface: prometheus_scrape

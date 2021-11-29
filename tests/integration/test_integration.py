@@ -2,6 +2,7 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import asyncio
 import logging
 import time
 from pathlib import Path
@@ -57,18 +58,27 @@ async def test_build_and_deploy(ops_test: OpsTest):
             "upstream-source"
         ],
     }
-    await ops_test.model.deploy(
-        PROMETHEUS_APPLICATION_NAME, application_name=PROMETHEUS_APPLICATION_NAME, channel="edge"
+
+    await asyncio.gather(
+        ops_test.model.deploy(
+            PROMETHEUS_APPLICATION_NAME,
+            application_name=PROMETHEUS_APPLICATION_NAME,
+            channel="edge",
+        ),
+        ops_test.model.deploy(
+            charm, resources=resources, application_name=APPLICATION_NAME, trust=True
+        ),
     )
-    await ops_test.model.deploy(
-        charm, resources=resources, application_name=APPLICATION_NAME, trust=True
-    )
+
     await ops_test.model.add_relation(relation1="prometheus-k8s", relation2=APPLICATION_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APPLICATION_NAME, "prometheus-k8s"], status="active", timeout=1000
-    )
-    await ops_test.model.wait_for_idle(
-        apps=[PROMETHEUS_APPLICATION_NAME], status="active", timeout=1000
+
+    await asyncio.gather(
+        await ops_test.model.wait_for_idle(
+            apps=[APPLICATION_NAME, "prometheus-k8s"], status="active", timeout=1000
+        ),
+        await ops_test.model.wait_for_idle(
+            apps=[PROMETHEUS_APPLICATION_NAME], status="active", timeout=1000
+        ),
     )
     prometheus_k8s_unit = ops_test.model.units[f"{PROMETHEUS_APPLICATION_NAME}/0"]
     prometheus_k8s_private_address = prometheus_k8s_unit.data["private-address"]

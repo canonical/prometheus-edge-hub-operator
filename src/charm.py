@@ -19,21 +19,21 @@ logger = logging.getLogger(__name__)
 
 PROMETHEUS_EDGE_HUB_PORT = 9091
 PROMETHEUS_EDGE_HUB_GRPC_PORT = 9092
+CHARM_NAME = "prometheus-edge-hub"
 
 
 class PrometheusEdgeHubCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
-        self._container_name = self._service_name = "prometheus-edge-hub"
-        self._container = self.unit.get_container(self._container_name)
+        self._container = self.unit.get_container(CHARM_NAME)
         self.framework.observe(self.on.prometheus_edge_hub_pebble_ready, self._configure)
         self.framework.observe(self.on.config_changed, self._configure)
         self._service_patcher = KubernetesServicePatch(
             self,
             [
-                (self._service_name, PROMETHEUS_EDGE_HUB_PORT, PROMETHEUS_EDGE_HUB_PORT),
+                (CHARM_NAME, PROMETHEUS_EDGE_HUB_PORT, PROMETHEUS_EDGE_HUB_PORT),
                 (
-                    f"{self._service_name}-grpc",
+                    f"{CHARM_NAME}-grpc",
                     PROMETHEUS_EDGE_HUB_GRPC_PORT,
                     PROMETHEUS_EDGE_HUB_GRPC_PORT,
                 ),
@@ -41,7 +41,7 @@ class PrometheusEdgeHubCharm(CharmBase):
         )
         self.metrics_endpoint_provider = MetricsEndpointProvider(
             self,
-            relation_name="monitoring",
+            relation_name="metrics-endpoint",
             jobs=[
                 {
                     "static_configs": [{"targets": [f"*:{PROMETHEUS_EDGE_HUB_PORT}"]}],
@@ -56,10 +56,10 @@ class PrometheusEdgeHubCharm(CharmBase):
         """
         config = self.model.config
         args = [f"-grpc-port={PROMETHEUS_EDGE_HUB_GRPC_PORT}"]
-        if config["limit"] != -1:
-            args.append(f"-limit={config['limit']}")
-        if config["scrape-timeout"] != 10:
-            args.append(f"-scrapeTimeout={config['scrape-timeout']}")
+        if config["metrics_count_limit"] != -1:
+            args.append(f"-limit={config['metrics_count_limit']}")
+        if config["scrape_timeout"] != 10:
+            args.append(f"-scrapeTimeout={config['scrape_timeout']}")
         command = ["prometheus-edge-hub"] + args
         return " ".join(command)
 
@@ -70,10 +70,10 @@ class PrometheusEdgeHubCharm(CharmBase):
         """
         return Layer(
             {
-                "summary": f"{self._service_name} pebble layer",
+                "summary": f"{CHARM_NAME} pebble layer",
                 "services": {
-                    self._service_name: {
-                        "summary": self._service_name,
+                    CHARM_NAME: {
+                        "summary": CHARM_NAME,
                         "override": "replace",
                         "startup": "enabled",
                         "command": self._command(),
@@ -91,9 +91,9 @@ class PrometheusEdgeHubCharm(CharmBase):
         plan = self._container.get_plan()
         layer = self._pebble_layer
         if plan.services != layer.services:
-            self._container.add_layer(self._container_name, layer, combine=True)
-            self._container.restart(self._service_name)
-            logger.info(f"Restarted container {self._service_name}")
+            self._container.add_layer(CHARM_NAME, layer, combine=True)
+            self._container.restart(CHARM_NAME)
+            logger.info(f"Restarted container {CHARM_NAME}")
         self.unit.status = ActiveStatus()
 
 

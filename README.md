@@ -30,9 +30,7 @@ juju deploy prometheus-k8s --channel edge
 juju relate prometheus-k8s prometheus-edge-hub
 ```
 
-## OCI Images
-
-Default image: facebookincubator/prometheus-edge-hub:1.1.0
+Refs: https://juju.is/docs/lma2
 
 ## Contributing
 
