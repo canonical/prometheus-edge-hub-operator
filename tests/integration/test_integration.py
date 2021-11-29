@@ -73,10 +73,10 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await ops_test.model.add_relation(relation1="prometheus-k8s", relation2=APPLICATION_NAME)
 
     await asyncio.gather(
-        await ops_test.model.wait_for_idle(
+        ops_test.model.wait_for_idle(
             apps=[APPLICATION_NAME, "prometheus-k8s"], status="active", timeout=1000
         ),
-        await ops_test.model.wait_for_idle(
+        ops_test.model.wait_for_idle(
             apps=[PROMETHEUS_APPLICATION_NAME], status="active", timeout=1000
         ),
     )
