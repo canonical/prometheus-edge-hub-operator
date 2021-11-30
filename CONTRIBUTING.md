@@ -25,3 +25,5 @@ tox -e integration
 
 ## OCI Images
 Default image: facebookincubator/prometheus-edge-hub:1.1.0
+
+- Reference: [dockerhub](https://hub.docker.com/r/facebookincubator/prometheus-edge-hub)
