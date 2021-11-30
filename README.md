@@ -4,9 +4,10 @@
 
 Prometheus Edge Hub is a replacement of the Prometheus Pushgateway which allows for the pushing of 
 metrics to an endpoint for scraping by prometheus, rather than having Prometheus scrape the metric 
-sources directly. This differs from the Prometheus Pushgateway in several ways, the most important 
-of which being that it does not overwrite timestamps and that metrics do not persist until updated. 
-When the hub is scraped, all metrics are drained.
+sources directly. Prometheus Edge Hub differs from the Prometheus Pushgateway in several ways, the most important
+of which are:
+1. Prometheus Edge Hub not overwrite timestamps
+2. Metrics in Prometheus Edge Hub persist only until scraped
 
 This project is a Juju charm to deploy Prometheus Edge Hub on Kubernetes.
 
