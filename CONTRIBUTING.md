@@ -27,3 +27,25 @@ tox -e integration
 Default image: facebookincubator/prometheus-edge-hub:1.1.0
 
 - Reference: [dockerhub](https://hub.docker.com/r/facebookincubator/prometheus-edge-hub)
+
+## Publish
+
+- Pack the charm:
+```bash
+charmcraft pack
+```
+
+- Upload the charm to charmhub:
+```bash
+charmcraft upload prometheus-edge-hub_ubuntu-20.04-amd64.charm
+```
+
+- Upload the OCI image to charmhub:
+```bash
+charmcraft upload-resource prometheus-edge-hub prometheus-edge-hub-image --image=facebookincubator/prometheus-edge-hub:1.1.0
+```
+
+- Release the charm:
+```bash
+charmcraft release prometheus-edge-hub --revision=1 --channel=edge --resource=prometheus-edge-hub-image:1
+```

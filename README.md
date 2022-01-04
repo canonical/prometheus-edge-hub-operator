@@ -14,14 +14,8 @@ This project is a Juju charm to deploy Prometheus Edge Hub on Kubernetes.
 
 ## Usage
 
-For now, you have to build the charm yourself before deploying it. Please refer to CONTRIBUTING.md
-for more information on the build itself. Once it is built, you can deploy the charm using 
-`juju deploy`: 
-
 ```bash
-juju deploy ./prometheus-edge-hub_ubuntu-20.04-amd64.charm \
- --config metrics_count_limit=500000 \
- --resource prometheus-edge-hub-image=facebookincubator/prometheus-edge-hub:1.1.0
+juju deploy prometheus-edge-hub --config metrics_count_limit=500000
 ```
 
 ### Relating to Prometheus
@@ -31,8 +25,4 @@ juju deploy prometheus-k8s --channel edge
 juju relate prometheus-k8s prometheus-edge-hub
 ```
 
-Refs: https://juju.is/docs/lma2
-
-## Contributing
-
-Please see the `CONTRIBUTING.md` for developer guidance.
+- References: https://juju.is/docs/lma2
