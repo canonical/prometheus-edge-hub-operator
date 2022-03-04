@@ -25,6 +25,7 @@ CHARM_NAME = "prometheus-edge-hub"
 class PrometheusEdgeHubCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
+        self._container_name = self._service_name = CHARM_NAME
         self._container = self.unit.get_container(CHARM_NAME)
         self.framework.observe(self.on.prometheus_edge_hub_pebble_ready, self._configure)
         self.framework.observe(self.on.config_changed, self._configure)
@@ -88,13 +89,19 @@ class PrometheusEdgeHubCharm(CharmBase):
         be made
         """
         self.unit.status = MaintenanceStatus("Configuring pod")
-        plan = self._container.get_plan()
-        layer = self._pebble_layer
-        if plan.services != layer.services:
-            self._container.add_layer(CHARM_NAME, layer, combine=True)
-            self._container.restart(CHARM_NAME)
-            logger.info(f"Restarted container {CHARM_NAME}")
-        self.unit.status = ActiveStatus()
+        try:
+            plan = self._container.get_plan()
+            layer = self._pebble_layer
+            if plan.services != layer.services:
+                self._container.add_layer(CHARM_NAME, layer, combine=True)
+                self._container.restart(CHARM_NAME)
+                logger.info(f"Restarted container {CHARM_NAME}")
+            self.unit.status = ActiveStatus()
+        except ConnectionError:
+            logger.error(
+                f"Could not restart {self._service_name} -- Pebble socket does "
+                f"not exist or is not responsive"
+            )
 
 
 if __name__ == "__main__":
