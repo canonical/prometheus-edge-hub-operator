@@ -1,10 +1,7 @@
 name: Upload charm to charmhub
 
 on:
-  push:
-    branches:
-      - "main"
-      - "dev-bugfix"
+  push
 
 jobs:
   charmhub-upload:
