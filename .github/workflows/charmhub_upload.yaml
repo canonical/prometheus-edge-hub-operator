@@ -1,7 +1,9 @@
 name: Upload charm to charmhub
 
 on:
-  push
+  push:
+    branches:
+      - "main"
 
 jobs:
   charmhub-upload:
