@@ -12,7 +12,7 @@ from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore
 )
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus
+from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
@@ -88,8 +88,8 @@ class PrometheusEdgeHubCharm(CharmBase):
         Configures the pebble layer and patches the Kubernetes services if there's a change to
         be made
         """
-        self.unit.status = MaintenanceStatus("Configuring pod")
-        try:
+        if self._container.can_connect():
+            self.unit.status = MaintenanceStatus("Configuring pod")
             plan = self._container.get_plan()
             layer = self._pebble_layer
             if plan.services != layer.services:
@@ -97,11 +97,9 @@ class PrometheusEdgeHubCharm(CharmBase):
                 self._container.restart(CHARM_NAME)
                 logger.info(f"Restarted container {CHARM_NAME}")
             self.unit.status = ActiveStatus()
-        except ConnectionError:
-            logger.error(
-                f"Could not restart {self._service_name} -- Pebble socket does "
-                f"not exist or is not responsive"
-            )
+        else:
+            self.unit.status = WaitingStatus("Waiting for container to be ready...")
+            event.defer()
 
 
 if __name__ == "__main__":
