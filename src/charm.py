@@ -12,7 +12,7 @@ from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore
 )
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus
+from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ CHARM_NAME = "prometheus-edge-hub"
 class PrometheusEdgeHubCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
+        self._container_name = self._service_name = CHARM_NAME
         self._container = self.unit.get_container(CHARM_NAME)
         self.framework.observe(self.on.prometheus_edge_hub_pebble_ready, self._configure)
         self.framework.observe(self.on.config_changed, self._configure)
@@ -87,14 +88,18 @@ class PrometheusEdgeHubCharm(CharmBase):
         Configures the pebble layer and patches the Kubernetes services if there's a change to
         be made
         """
-        self.unit.status = MaintenanceStatus("Configuring pod")
-        plan = self._container.get_plan()
-        layer = self._pebble_layer
-        if plan.services != layer.services:
-            self._container.add_layer(CHARM_NAME, layer, combine=True)
-            self._container.restart(CHARM_NAME)
-            logger.info(f"Restarted container {CHARM_NAME}")
-        self.unit.status = ActiveStatus()
+        if self._container.can_connect():
+            self.unit.status = MaintenanceStatus("Configuring pod")
+            plan = self._container.get_plan()
+            layer = self._pebble_layer
+            if plan.services != layer.services:
+                self._container.add_layer(CHARM_NAME, layer, combine=True)
+                self._container.restart(CHARM_NAME)
+                logger.info(f"Restarted container {CHARM_NAME}")
+            self.unit.status = ActiveStatus()
+        else:
+            self.unit.status = WaitingStatus("Waiting for container to be ready...")
+            event.defer()
 
 
 if __name__ == "__main__":

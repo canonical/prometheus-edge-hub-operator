@@ -33,15 +33,15 @@ jobs:
         run: pip install tox
       - name: Run tests using tox
         run: tox -e unit
-
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-      - name: Run integration tests
-        run: tox -e integration
+#
+#  integration-test:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Setup operator environment
+#        uses: charmed-kubernetes/actions-operator@main
+#        with:
+#          provider: microk8s
+#      - name: Run integration tests
+#        run: tox -e integration
