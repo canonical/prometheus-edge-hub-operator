@@ -83,3 +83,9 @@ async def test_build_and_deploy(ops_test: OpsTest):
     prometheus_k8s_unit = ops_test.model.units[f"{PROMETHEUS_APPLICATION_NAME}/0"]
     prometheus_k8s_private_address = prometheus_k8s_unit.data["private-address"]
     validate_scrape_target_is_added_to_prometheus(prometheus_k8s_private_address)
+
+
+@pytest.mark.abort_on_fail
+async def test_remove_relation(ops_test: OpsTest):
+    await ops_test.model.applications[APPLICATION_NAME].remove_relation(PROMETHEUS_APPLICATION_NAME, APPLICATION_NAME)
+    assert await ops_test.model.wait_for_idle(apps=[APPLICATION_NAME], status="blocked", timeout=1000)
