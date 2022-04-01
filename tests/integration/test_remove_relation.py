@@ -42,3 +42,4 @@ async def test_deploy(ops_test,charm_under_test):
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications[app_name].remove_relation(PROMETHEUS_APPLICATION_NAME, APPLICATION_NAME)
     assert await ops_test.model.wait_for_idle(apps=[app_name], status="blocked", timeout=1000)
+    
