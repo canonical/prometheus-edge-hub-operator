@@ -84,11 +84,9 @@ async def test_build_and_deploy(ops_test: OpsTest):
     prometheus_k8s_private_address = prometheus_k8s_unit.data["private-address"]
     validate_scrape_target_is_added_to_prometheus(prometheus_k8s_private_address)
 
-
-
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications["prometheus-edge-hub"].\
         remove_relation("metrics-endpoint", "prometheus-k8s")
-    await ops_test.model.wait_for_idle\
-        (apps=["prometheus-edge-hub"], status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(
+        apps=["prometheus-edge-hub"], status="active", timeout=1000)
 
