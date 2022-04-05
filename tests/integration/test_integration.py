@@ -88,5 +88,5 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
 async def test_remove_relation(ops_test: OpsTest):
     await ops_test.model.applications["prometheus-edge-hub"].remove_relation("metrics-endpoint","prometheus-k8s")
-    await ops_test.model.wait_for_idle(apps=["prometheus-edge-hub"], status="blocked", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=["prometheus-edge-hub"], status="active", timeout=1000)
 
