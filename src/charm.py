@@ -42,10 +42,11 @@ class PrometheusEdgeHubCharm(CharmBase):
         )
         self.metrics_endpoint_provider = MetricsEndpointProvider(
             self,
-            relation_name="metrics-endpoint",
             jobs=[
                 {
-                    "static_configs": [{"targets": [f"*:{PROMETHEUS_EDGE_HUB_PORT}"]}],
+                    "static_configs": [
+                        {"targets": [f"{self.app.name}:{PROMETHEUS_EDGE_HUB_PORT}"]}
+                    ],
                 }
             ],
         )
