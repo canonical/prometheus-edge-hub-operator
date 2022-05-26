@@ -140,3 +140,12 @@ class TestCharm(unittest.TestCase):
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.assertEqual(initial_plan, expected_initial_plan)
         self.assertEqual(updated_plan, expected_final_plan)
+
+    @patch.object(PrometheusEdgeHubCharm, "_on_metrics_endpoint_relation_joined")
+    def test_given_prometheus_edge_hub_operator_charm_when_metrics_endpoint_relation_joined_event_emitted_then_on_metrics_endpoint_relation_joined_function_called(  # noqa: E501
+        self, patched_on_metrics_endpoint_relation_joined
+    ):
+        relation_id = self.harness.add_relation("metrics_endpoint", "prometheus_scrape")
+        self.harness.add_relation_unit(relation_id, "test/0")
+
+        patched_on_metrics_endpoint_relation_joined.assert_called_once()
