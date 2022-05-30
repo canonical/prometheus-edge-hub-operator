@@ -10,9 +10,15 @@ from charms.observability_libs.v0.kubernetes_service_patch import (  # type: ign
 from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore
     MetricsEndpointProvider,
 )
-from ops.charm import CharmBase
+from ops.charm import CharmBase, PebbleReadyEvent, RelationJoinedEvent
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
+from ops.model import (
+    ActiveStatus,
+    MaintenanceStatus,
+    ModelError,
+    Relation,
+    WaitingStatus,
+)
 from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
@@ -28,6 +34,9 @@ class PrometheusEdgeHubCharm(CharmBase):
         self._container_name = self._service_name = CHARM_NAME
         self._container = self.unit.get_container(CHARM_NAME)
         self.framework.observe(self.on.prometheus_edge_hub_pebble_ready, self._configure)
+        self.framework.observe(
+            self.on.metrics_endpoint_relation_joined, self._on_metrics_endpoint_relation_joined
+        )
         self.framework.observe(self.on.config_changed, self._configure)
         self._service_patcher = KubernetesServicePatch(
             self,
@@ -84,7 +93,7 @@ class PrometheusEdgeHubCharm(CharmBase):
             }
         )
 
-    def _configure(self, event):
+    def _configure(self, event: PebbleReadyEvent):
         """
         Configures the pebble layer and patches the Kubernetes services if there's a change to
         be made
@@ -101,6 +110,33 @@ class PrometheusEdgeHubCharm(CharmBase):
         else:
             self.unit.status = WaitingStatus("Waiting for container to be ready...")
             event.defer()
+
+    def _on_metrics_endpoint_relation_joined(self, event: RelationJoinedEvent):
+        if not self.unit.is_leader():
+            return
+        self._update_relation_active_status(
+            relation=event.relation, is_active=self._service_is_running
+        )
+        if not self._service_is_running:
+            event.defer()
+            return
+
+    def _update_relation_active_status(self, relation: Relation, is_active: bool):
+        relation.data[self.unit].update(
+            {
+                "active": str(is_active),
+            }
+        )
+
+    @property
+    def _service_is_running(self) -> bool:
+        if self._container.can_connect():
+            try:
+                self._container.get_service(self._service_name)
+                return True
+            except ModelError:
+                pass
+        return False
 
 
 if __name__ == "__main__":
