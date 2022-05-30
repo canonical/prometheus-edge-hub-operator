@@ -141,11 +141,28 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(initial_plan, expected_initial_plan)
         self.assertEqual(updated_plan, expected_final_plan)
 
-    @patch.object(PrometheusEdgeHubCharm, "_on_metrics_endpoint_relation_joined")
-    def test_given_prometheus_edge_hub_operator_charm_when_metrics_endpoint_relation_joined_event_emitted_then_on_metrics_endpoint_relation_joined_function_called(  # noqa: E501
-        self, patched_on_metrics_endpoint_relation_joined
+    def test_given_prometheus_edge_hub_service_running_when_metrics_endpoint_relation_joined_event_emitted_then_active_key_in_relation_data_is_set_to_true(  # noqa: E501
+        self,
     ):
+        container = self.harness.model.unit.get_container("prometheus-edge-hub")
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.set_leader(True)
         relation_id = self.harness.add_relation("metrics_endpoint", "prometheus_scrape")
-        self.harness.add_relation_unit(relation_id, "test/0")
+        self.harness.add_relation_unit(relation_id, "prometheus-edge-hub/0")
 
-        patched_on_metrics_endpoint_relation_joined.assert_called_once()
+        self.assertEqual(
+            self.harness.get_relation_data(relation_id, "prometheus-edge-hub/0"),
+            {"active": "True"},
+        )
+
+    def test_given_prometheus_edge_hub_service_not_running_when_metrics_endpoint_relation_joined_event_emitted_then_active_key_in_relation_data_is_set_to_false(  # noqa: E501
+        self,
+    ):
+        self.harness.set_leader(True)
+        relation_id = self.harness.add_relation("metrics_endpoint", "prometheus_scrape")
+        self.harness.add_relation_unit(relation_id, "prometheus-edge-hub/0")
+
+        self.assertEqual(
+            self.harness.get_relation_data(relation_id, "prometheus-edge-hub/0"),
+            {"active": "False"},
+        )

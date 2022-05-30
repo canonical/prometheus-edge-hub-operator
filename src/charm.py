@@ -10,9 +10,15 @@ from charms.observability_libs.v0.kubernetes_service_patch import (  # type: ign
 from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore
     MetricsEndpointProvider,
 )
-from ops.charm import CharmBase
+from ops.charm import CharmBase, PebbleReadyEvent, RelationJoinedEvent
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus, ModelError, WaitingStatus
+from ops.model import (
+    ActiveStatus,
+    MaintenanceStatus,
+    ModelError,
+    Relation,
+    WaitingStatus,
+)
 from ops.pebble import Layer
 
 logger = logging.getLogger(__name__)
@@ -87,7 +93,7 @@ class PrometheusEdgeHubCharm(CharmBase):
             }
         )
 
-    def _configure(self, event):
+    def _configure(self, event: PebbleReadyEvent):
         """
         Configures the pebble layer and patches the Kubernetes services if there's a change to
         be made
@@ -105,14 +111,17 @@ class PrometheusEdgeHubCharm(CharmBase):
             self.unit.status = WaitingStatus("Waiting for container to be ready...")
             event.defer()
 
-    def _on_metrics_endpoint_relation_joined(self, event):
+    def _on_metrics_endpoint_relation_joined(self, event: RelationJoinedEvent):
         if not self.unit.is_leader():
             return
         self._update_relation_active_status(
             relation=event.relation, is_active=self._service_is_running
         )
+        if not self._service_is_running:
+            event.defer()
+            return
 
-    def _update_relation_active_status(self, relation, is_active: bool):
+    def _update_relation_active_status(self, relation: Relation, is_active: bool):
         relation.data[self.unit].update(
             {
                 "active": str(is_active),
