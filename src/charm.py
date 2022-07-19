@@ -4,12 +4,11 @@
 
 import logging
 
-from charms.observability_libs.v0.kubernetes_service_patch import (  # type: ignore
+from charms.observability_libs.v1.kubernetes_service_patch import (
     KubernetesServicePatch,
+    ServicePort,
 )
-from charms.prometheus_k8s.v0.prometheus_scrape import (  # type: ignore
-    MetricsEndpointProvider,
-)
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from ops.charm import CharmBase, PebbleReadyEvent, RelationJoinedEvent
 from ops.main import main
 from ops.model import (
@@ -41,12 +40,8 @@ class PrometheusEdgeHubCharm(CharmBase):
         self._service_patcher = KubernetesServicePatch(
             self,
             [
-                (CHARM_NAME, PROMETHEUS_EDGE_HUB_PORT, PROMETHEUS_EDGE_HUB_PORT),
-                (
-                    f"{CHARM_NAME}-grpc",
-                    PROMETHEUS_EDGE_HUB_GRPC_PORT,
-                    PROMETHEUS_EDGE_HUB_GRPC_PORT,
-                ),
+                ServicePort(name=CHARM_NAME, port=PROMETHEUS_EDGE_HUB_PORT),
+                ServicePort(name=f"{CHARM_NAME}-grpc", port=PROMETHEUS_EDGE_HUB_GRPC_PORT),
             ],
         )
         self.metrics_endpoint_provider = MetricsEndpointProvider(
