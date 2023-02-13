@@ -71,9 +71,7 @@ class PrometheusEdgeHubCharm(CharmBase):
 
     @property
     def _pebble_layer(self) -> Layer:
-        """
-        Returns the pebble layer
-        """
+        """Returns the pebble layer."""
         return Layer(
             {
                 "summary": f"{CHARM_NAME} pebble layer",
