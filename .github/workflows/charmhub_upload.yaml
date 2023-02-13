@@ -40,7 +40,6 @@ jobs:
           upload-image: ${{ inputs.upload-image }}
           channel: "${{ steps.channel.outputs.name }}"
           charm-path: ./${{ inputs.charm }}
-          tag-prefix: magma-${{ inputs.charm }}
 
       - name: Chmod charmcraft logs
         if: steps.upload.conclusion == 'failure'
