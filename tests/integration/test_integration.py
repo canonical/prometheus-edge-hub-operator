@@ -2,7 +2,6 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import asyncio
 import logging
 import time
 from pathlib import Path
@@ -17,6 +16,60 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 
 APPLICATION_NAME = "prometheus-edge-hub"
 PROMETHEUS_APPLICATION_NAME = "prometheus-k8s"
+
+
+class TestPrometheusEdgeHub:
+    @pytest.fixture(scope="module")
+    @pytest.mark.abort_on_fail
+    async def setup(self, ops_test: OpsTest):
+        await ops_test.model.set_config({"update-status-hook-interval": "2s"})  # type: ignore[union-attr]  # noqa: E501
+        await self._deploy_prometheus_k8s(ops_test)
+
+    @pytest.fixture(scope="module")
+    @pytest.mark.abort_on_fail
+    async def build_and_deploy(self, ops_test: OpsTest, setup):
+        charm = await ops_test.build_charm(".")
+        resources = {
+            f"{APPLICATION_NAME}-image": METADATA["resources"][f"{APPLICATION_NAME}-image"][
+                "upstream-source"
+            ],
+        }
+
+        await ops_test.model.deploy(  # type: ignore[union-attr]
+            charm, resources=resources, application_name=APPLICATION_NAME, trust=True
+        )
+
+    @pytest.mark.abort_on_fail
+    async def test_wait_for_active_status(self, ops_test, build_and_deploy):
+        await ops_test.model.wait_for_idle(apps=[APPLICATION_NAME], status="active", timeout=1000)
+
+    @pytest.mark.abort_on_fail
+    async def test_scrape_target_added_to_prometheus(self, ops_test, build_and_deploy):
+        await ops_test.model.add_relation(relation1="prometheus-k8s", relation2=APPLICATION_NAME)
+        await ops_test.model.wait_for_idle(
+            apps=[APPLICATION_NAME, "prometheus-k8s"], status="active", timeout=1000
+        )
+
+        prometheus_k8s_unit = ops_test.model.units[f"{PROMETHEUS_APPLICATION_NAME}/0"]
+        prometheus_k8s_private_address = prometheus_k8s_unit.data["private-address"]
+        validate_scrape_target_is_added_to_prometheus(prometheus_k8s_private_address)
+
+    async def test_remove_relation(self, ops_test, build_and_deploy):
+        await ops_test.model.applications["prometheus-edge-hub"].remove_relation(
+            "metrics-endpoint", "prometheus-k8s"
+        )
+        await ops_test.model.wait_for_idle(apps=[APPLICATION_NAME], status="active", timeout=1000)
+
+    @staticmethod
+    async def _deploy_prometheus_k8s(ops_test: OpsTest):
+        await ops_test.model.deploy(  # type: ignore[union-attr]
+            PROMETHEUS_APPLICATION_NAME, application_name=PROMETHEUS_APPLICATION_NAME
+        )
+
+
+def validate_scrape_target_is_added_to_prometheus(prometheus_address: str):
+    scrape_targets = get_scrape_targets(prometheus_address)
+    validate_scrape_targets(scrape_targets)
 
 
 def get_scrape_targets(prometheus_address: str):
@@ -43,50 +96,3 @@ def validate_scrape_targets(scrape_targets: dict):
         "prometheus-edge-hub_prometheus_scrape"
     )
     assert prometheus_edge_hub_target["scrapeUrl"].endswith(":9091/metrics")
-
-
-def validate_scrape_target_is_added_to_prometheus(prometheus_address: str):
-    scrape_targets = get_scrape_targets(prometheus_address)
-    validate_scrape_targets(scrape_targets)
-
-
-@pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest):
-    charm = await ops_test.build_charm(".")
-    resources = {
-        f"{APPLICATION_NAME}-image": METADATA["resources"][f"{APPLICATION_NAME}-image"][
-            "upstream-source"
-        ],
-    }
-
-    await asyncio.gather(
-        ops_test.model.deploy(
-            PROMETHEUS_APPLICATION_NAME,
-            application_name=PROMETHEUS_APPLICATION_NAME,
-            channel="edge",
-        ),
-        ops_test.model.deploy(
-            charm, resources=resources, application_name=APPLICATION_NAME, trust=True
-        ),
-    )
-
-    await ops_test.model.add_relation(relation1="prometheus-k8s", relation2=APPLICATION_NAME)
-
-    await asyncio.gather(
-        ops_test.model.wait_for_idle(
-            apps=[APPLICATION_NAME, "prometheus-k8s"], status="active", timeout=1000
-        ),
-        ops_test.model.wait_for_idle(
-            apps=[PROMETHEUS_APPLICATION_NAME], status="active", timeout=1000
-        ),
-    )
-    prometheus_k8s_unit = ops_test.model.units[f"{PROMETHEUS_APPLICATION_NAME}/0"]
-    prometheus_k8s_private_address = prometheus_k8s_unit.data["private-address"]
-    validate_scrape_target_is_added_to_prometheus(prometheus_k8s_private_address)
-
-
-async def test_remove_relation(ops_test: OpsTest):
-    await ops_test.model.applications["prometheus-edge-hub"].remove_relation(
-        "metrics-endpoint", "prometheus-k8s"
-    )
-    await ops_test.model.wait_for_idle(apps=["prometheus-edge-hub"], status="active", timeout=1000)
