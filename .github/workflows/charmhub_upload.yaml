@@ -25,7 +25,7 @@ jobs:
         with:
           credentials: ${{ secrets.CHARMCRAFT_AUTH }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          charm-path: ./${{ inputs.charm }}
+          charm-path: ./prometheus-edge-hub-operator
 
       - name: Select charmhub channel
         uses: canonical/charming-actions/channel@2.2.2
