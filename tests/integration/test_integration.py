@@ -63,7 +63,7 @@ class TestPrometheusEdgeHub:
     @staticmethod
     async def _deploy_prometheus_k8s(ops_test: OpsTest):
         await ops_test.model.deploy(  # type: ignore[union-attr]
-            PROMETHEUS_APPLICATION_NAME, application_name=PROMETHEUS_APPLICATION_NAME
+            PROMETHEUS_APPLICATION_NAME, application_name=PROMETHEUS_APPLICATION_NAME, trust=True
         )
 
 
