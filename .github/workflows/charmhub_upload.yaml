@@ -37,9 +37,9 @@ jobs:
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          upload-image: ${{ inputs.upload-image }}
+          upload-image:  "false"
           channel: "${{ steps.channel.outputs.name }}"
-          charm-path: ./${{ inputs.charm }}
+          charm-path: ./prometheus-edge-hub-operator
 
       - name: Chmod charmcraft logs
         if: steps.upload.conclusion == 'failure'
