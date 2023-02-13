@@ -20,14 +20,17 @@ class TestCharm(unittest.TestCase):
         self.harness = Harness(PrometheusEdgeHubCharm)
         self.addCleanup(self.harness.cleanup)
         self.harness.begin()
+        self._container = self.harness.model.unit.get_container("prometheus-edge-hub")
 
     def test_given_initial_status_when_get_pebble_plan_then_content_is_empty(self):
+        self.harness.set_can_connect(container=self._container, val=True)
         initial_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub")
         self.assertEqual(initial_plan.to_yaml(), "{}\n")
 
     def test_given_pebble_ready_when_get_pebble_plan_then_plan_is_filled_with_service_content(
         self,
     ):
+        self.harness.set_can_connect(container=self._container, val=True)
         expected_plan = {
             "services": {
                 "prometheus-edge-hub": {
@@ -39,14 +42,14 @@ class TestCharm(unittest.TestCase):
             },
         }
         self.harness.update_config(MINIMAL_CONFIG)
-        container = self.harness.model.unit.get_container("prometheus-edge-hub")
-        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(self._container)
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.assertEqual(expected_plan, updated_plan)
 
     def test_given_configs_provided_when_get_pebble_plan_then_plan_is_filled_with_service_content(
         self,
     ):
+        self.harness.set_can_connect(container=self._container, val=True)
         config: typing.Mapping = {"metrics_count_limit": 200}
         expected_plan = {
             "services": {
@@ -61,14 +64,14 @@ class TestCharm(unittest.TestCase):
             },
         }
         self.harness.update_config(config)
-        container = self.harness.model.unit.get_container("prometheus-edge-hub")
-        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(self._container)
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.assertEqual(expected_plan, updated_plan)
 
     def test_given_default_configs_provided_when_get_pebble_plan_then_plan_is_filled_with_service_content(  # noqa: E501
         self,
     ):
+        self.harness.set_can_connect(container=self._container, val=True)
         config: typing.Mapping = {"metrics_count_limit": -1}
         expected_plan = {
             "services": {
@@ -81,14 +84,14 @@ class TestCharm(unittest.TestCase):
             },
         }
         self.harness.update_config(config)
-        container = self.harness.model.unit.get_container("prometheus-edge-hub")
-        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(self._container)
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.assertEqual(expected_plan, updated_plan)
 
     def test_given_default_configs_provided_when_defaults_config_sent_again_then_plan_is_not_changed(  # noqa: E501
         self,
     ):
+        self.harness.set_can_connect(container=self._container, val=True)
         config: typing.Mapping = {"metrics_count_limit": -1}
         expected_plan = {
             "services": {
@@ -101,8 +104,7 @@ class TestCharm(unittest.TestCase):
             },
         }
 
-        container = self.harness.model.unit.get_container("prometheus-edge-hub")
-        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(self._container)
         initial_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.harness.update_config(config)
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
@@ -110,6 +112,7 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(updated_plan, expected_plan)
 
     def test_given_default_configs_provided_when_config_change_then_plan_is_changed(self):
+        self.harness.set_can_connect(container=self._container, val=True)
         config: typing.Mapping = {"metrics_count_limit": 25}
         expected_initial_plan = {
             "services": {
@@ -133,8 +136,7 @@ class TestCharm(unittest.TestCase):
             },
         }
 
-        container = self.harness.model.unit.get_container("prometheus-edge-hub")
-        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(self._container)
         initial_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
         self.harness.update_config(config)
         updated_plan = self.harness.get_container_pebble_plan("prometheus-edge-hub").to_dict()
@@ -144,8 +146,8 @@ class TestCharm(unittest.TestCase):
     def test_given_prometheus_edge_hub_service_running_when_metrics_endpoint_relation_joined_event_emitted_then_active_key_in_relation_data_is_set_to_true(  # noqa: E501
         self,
     ):
-        container = self.harness.model.unit.get_container("prometheus-edge-hub")
-        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(container)
+        self.harness.set_can_connect(container=self._container, val=True)
+        self.harness.charm.on.prometheus_edge_hub_pebble_ready.emit(self._container)
         self.harness.set_leader(True)
         relation_id = self.harness.add_relation("metrics_endpoint", "prometheus_scrape")
         self.harness.add_relation_unit(relation_id, "prometheus-edge-hub/0")

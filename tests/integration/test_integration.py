@@ -8,9 +8,9 @@ import time
 from pathlib import Path
 
 import pytest
-import requests  # type: ignore
+import requests
 import yaml
-from pytest_operator.plugin import OpsTest  # type: ignore
+from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
