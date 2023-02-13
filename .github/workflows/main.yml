@@ -35,6 +35,7 @@ jobs:
         run: tox -e unit
 
   integration-test:
+    name: Integration tests
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
